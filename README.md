@@ -25,7 +25,7 @@
 
 ![Image of creation for load balancer](/Load_Balancer.png)
 
-A load balancer is a tool to help to distribute traffic among multiple servers to improve a service or application's performance and reliability. 
+A load balancer is a tool to help to distribute incoming traffic among multiple servers to improve a service or application's performance and reliability. Cloud-based load balancers help distribute internet traffic evenly between servers that host the application. Our load balancer is using a dynamic algorithm so it's looking at things like server health, their current status, how well they are performing, etc when dsitributing traffic.
 
 ## Creating the System User and Directory Structure on Both Droplets
 
@@ -38,6 +38,8 @@ A load balancer is a tool to help to distribute traffic among multiple servers t
 **What does this do?**
 
 `-r`: Creates a system user.
+
+`-m`: Creates the home directory if it doesn't already exist.
 
 `-d /var/lib/webgen`: Specifies the home directory for the user.
 
@@ -80,6 +82,19 @@ The benefit of creating webgen as a system user because it has limited privilege
 
 <br>
 
+**What does `generate-index.service` do?**
+
+This `.service` file runs the generate_index script located at `/var/lib/webgen/bin/` by the webgen user to genrate an index.html file. We use the index.html file to display content for our web server. 
+
+<br>
+
+**What does `generate-index.timer` do?**
+The `.timer` file makes a systemd timer unit that schedules `generate-index.service` to run every day at 5:00 AM. 
+
+<br>
+
+**Why `/etc/systemd/service`?**
+
 We move the `.service` and `.timer` file to `/etc/systemd/service` because it's the common directory for user-defined or custom service and timer files. It also ensures that these files will persist across updates.
 
 <br>
@@ -114,6 +129,8 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 
 1. Download nginx
 
+`sudo pacman -S nginx`
+
 <br>
 
 1. Move the `nginx.conf` file 
@@ -122,13 +139,15 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 
 <br>
 
-3. Make a documents folder and create the text files
+3. Make a documents directory and create the text files
 
 `sudo mkdir /var/lib/webgen/documents`
 
 `sudo nvim /var/lib/webgen/documents/file-one`
 
 `sudo nvim /var/lib/webgen/documents/file-two`
+
+<br>
 
 3. Make folders for the server block 
 
@@ -140,11 +159,17 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 
 We created these two folders based on the template for setting up nginx given in the ArchiLinux wiki. They are a common convention in the configuration of nginx. This structure is used to manage our server block configuration.
 
+
+
 <br>
 
 4. Add the provided server block file `sites.conf` to `/etc/nginx/sites-available`
 
 `sudo mv ~/sites.conf /etc/nginx/sites-available`
+
+<br>
+
+We created a seperate server block file instead of putting it in nginx.conf because it's easier to maintain. We can add sites by creating new server block files into the `/etc/nginx/sites-available` folder and creating symbolic links. 
 
 <br>
 
@@ -198,8 +223,6 @@ server {
 `sudo systemctl enable nginx`
 
 <br>
-
-We created a seperate server block file instead of putting it in nginx.conf because it's easier to maintain. We can add sites by creating new server block files into the `/etc/nginx/sites-available` folder and creating symbolic links. 
 
 - Use `sudo systemctl status nginx` to check the nginx status and verify it's running. 
 - Use `sudo systemctl reload nginx` to reload nginx to apply any changes you've made to the configuration.
