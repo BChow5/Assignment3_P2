@@ -8,9 +8,13 @@
 
 1. Create your 2 droplets on digital ocean with the tag "web"
 
+* Refer to digitalOcean documentation if you need help
+
 <br>
 
 2. Create a load balancer for the droplets
+
+* Refer to digitalOcean documentation if you need help
 
 **Load Balancer Settings:**
 
@@ -21,6 +25,7 @@
 
 ![Image of creation for load balancer](/Load_Balancer.png)
 
+A load balancer is a tool to help to distribute traffic among multiple servers to improve a service or application's performance and reliability. 
 
 ## Creating the System User and Directory Structure on Both Droplets
 
@@ -75,7 +80,7 @@ The benefit of creating webgen as a system user because it has limited privilege
 
 <br>
 
-We move the `.service` and `.timer` file to `/etc/systemd/service` because it's the common directory for user-defined or custom service and timer files. It also ensures that these files will y persist across updates.
+We move the `.service` and `.timer` file to `/etc/systemd/service` because it's the common directory for user-defined or custom service and timer files. It also ensures that these files will persist across updates.
 
 <br>
 
@@ -117,10 +122,6 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 
 <br>
 
-2. Edit it to have `user webgen`
-
-<br>
-
 3. Make a documents folder and create the text files
 
 `sudo mkdir /var/lib/webgen/documents`
@@ -137,11 +138,42 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 
 <br>
 
+We created these two folders based on the template for setting up nginx given in the ArchiLinux wiki. They are a common convention in the configuration of nginx. This structure is used to manage our server block configuration.
+
+<br>
+
 4. Add the provided server block file `sites.conf` to `/etc/nginx/sites-available`
 
 `sudo mv ~/sites.conf /etc/nginx/sites-available`
 
 <br>
+
+**Inside our `sites.conf`**
+
+```
+server {
+	listen 80;
+	listen [::]:80;
+
+	server_name _;
+
+	root /var/lib/webgen/HTML;
+	index index.html;
+
+	location /documents {
+  		alias /var/lib/webgen/documents/;
+		autoindex on;
+	} 
+
+	location / {
+		try_files $uri $uri/ =404;
+	}
+}
+```
+
+* `listen 80` tells nginx to listen for incoming HTTP requests on port 80
+* `root /var/lib/webgen/HTML` specifies where to find the document's root (the directory that contains the website’s files). When a request is made to the server, nginx will serve files from this directory
+* `alias /var/lib/webgen/documents/;` Requests to `/documents` are mapped to `/var/lib/webgen/documents/`. The alias tells nginx to look at the file path `/var/lib/webgen/documents/` when someone goes to the url `/documents`. Alias allows you to serve files from a directory that is different from the root of your website.
 
 5. Create a symbolic link 
 
@@ -149,11 +181,17 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 
 <br>
 
-2. Reload Systemd After the Changes
+6. Reload Systemd After the Changes
 
 `sudo systemctl daemon-reload` 
 
-6. Start and enable nginx
+<br>
+
+7. Use `sudo nginx -t` to check for errors in the nginx configuration. 
+
+<br>
+
+8. Start and enable nginx
 
 `sudo systemctl start nginx`
 
