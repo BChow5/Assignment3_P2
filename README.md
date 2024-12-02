@@ -8,7 +8,7 @@
 
 1. Create your 2 droplets on digital ocean with the tag "web"
 
-* Refer to digitalOcean documentation if you need help
+* Refer to digitalOcean documentation if you need help setting these up
 
 <br>
 
@@ -25,7 +25,9 @@
 
 ![Image of creation for load balancer](/Load_Balancer.png)
 
-A load balancer is a tool to help to distribute incoming traffic among multiple servers to improve a service or application's performance and reliability. Cloud-based load balancers help distribute internet traffic evenly between servers that host the application. Our load balancer is using a dynamic algorithm so it's looking at things like server health, their current status, how well they are performing, etc when dsitributing traffic.
+A load balancer is a tool to help to distribute incoming traffic among multiple servers to improve a service or application's performance and reliability. Our cloud-based load balancer helps distribute internet traffic evenly between our two servers. The load balancer is using a dynamic algorithm so it's looking at things like server health, their current status, how well they are performing, etc when dsitributing traffic.
+
+![Explanation image for load balancer](/Load_Balancer_Explanation.png)
 
 ## Creating the System User and Directory Structure on Both Droplets
 
@@ -86,10 +88,43 @@ The benefit of creating webgen as a system user because it has limited privilege
 
 This `.service` file runs the generate_index script located at `/var/lib/webgen/bin/` by the webgen user to genrate an index.html file. We use the index.html file to display content for our web server. 
 
+```
+[Unit]
+Description=Run generate_index script to create the index.html file
+
+[Service]
+User=webgen
+Group=webgen
+ExecStart=/var/lib/webgen/bin/generate_index
+Restart=on-failure
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
+```
+
+* `ExecStart=` to specify the location of the script we're running
+* `Type=oneshot` specifies that the service does it's task once and doesn't remain active in the background
+
 <br>
 
 **What does `generate-index.timer` do?**
+
 The `.timer` file makes a systemd timer unit that schedules `generate-index.service` to run every day at 5:00 AM. 
+
+```
+[Unit]
+Description=Runs the generate-index.service every day at 5:00
+
+[Timer]
+OnCalendar=*-*-* 05:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+* `OnCalendar=` sets a reoccuring time for the timer to run
 
 <br>
 
@@ -169,11 +204,11 @@ We created these two folders based on the template for setting up nginx given in
 
 <br>
 
-We created a seperate server block file instead of putting it in nginx.conf because it's easier to maintain. We can add sites by creating new server block files into the `/etc/nginx/sites-available` folder and creating symbolic links. 
+We created a seperate server block file instead of putting it in nginx.conf because it's easier to maintain. We can add sites by creating new server block files into the `/etc/nginx/sites-available` folder and creating symbolic links for them. 
 
 <br>
 
-**Inside our `sites.conf`**
+**Inside our `sites.conf` server block** 
 
 ```
 server {
@@ -254,13 +289,21 @@ server {
 
 <br>
 
-4. Enable the firewall
+4. Reload after changes
+
+`sudo systemctl daemon-reload`
+
+<br>
+
+5. Enable the firewall
+
+`sudo ufw enable`
 
 `sudo systemctl enable --now ufw.service`
 
 <br>
 
-5. Check the status of the firewall to confirm everything is working correctly
+6. Check the status of the firewall to confirm everything is working correctly
 
 `sudo ufw status verbose`
 
