@@ -1,5 +1,6 @@
 [Unit]
 Description=Run generate_index script to create the index.html file
+Wants=multi-user.target
 
 [Service]
 User=webgen

@@ -91,6 +91,7 @@ This `.service` file runs the generate_index script located at `/var/lib/webgen/
 ```
 [Unit]
 Description=Run generate_index script to create the index.html file
+Wants=multi-user.target
 
 [Service]
 User=webgen
@@ -103,6 +104,7 @@ Type=oneshot
 WantedBy=multi-user.target
 ```
 
+* `Wants=multi-user.target` specifies a soft dependency wants the multi-user.target to be active. `multi-user.target` is the state where multiple users can log in.
 * `ExecStart=` to specify the location of the script we're running
 * `Type=oneshot` specifies that the service does it's task once and doesn't remain active in the background
 
@@ -162,6 +164,8 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 
 ## Setting Up `nginx`
 
+Nginx is a webserver. Web servers are software that we can run on our hardware server. The purpose of which is serve documents over the internet. Generally using HTTP(s). Web servers help to provide secure access to documents. Many provide additional features like load balancing and proxy forwarding.
+
 1. Download nginx
 
 `sudo pacman -S nginx`
@@ -171,6 +175,15 @@ We move the `.service` and `.timer` file to `/etc/systemd/service` because it's 
 1. Move the `nginx.conf` file 
 
 `sudo mv ~/nginx.conf /etc/nginx/`
+
+```
+include /etc/nginx/conf.d/*.conf;
+include /etc/nginx/sites-enabled/*;
+include sites-enabled/*;
+```
+These are to load additional configuration files to extend or modify nginx's behavior.
+
+* `include /etc/nginx/sites-enabled/*;` and `include sites-enabled/*;` These include all files in the sites-enabled/ directory and is commonly used to enable virtual hosts. 
 
 <br>
 
