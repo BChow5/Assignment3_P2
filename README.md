@@ -245,8 +245,10 @@ server {
 ```
 
 * `listen 80` tells nginx to listen for incoming HTTP requests on port 80
-* `root /var/lib/webgen/HTML` specifies where to find the document's root (the directory that contains the website’s files). When a request is made to the server, nginx will serve files from this directory
-* `alias /var/lib/webgen/documents/;` Requests to `/documents` are mapped to `/var/lib/webgen/documents/`. The alias tells nginx to look at the file path `/var/lib/webgen/documents/` when someone goes to the url `/documents`. Alias allows you to serve files from a directory that is different from the root of your website.
+* `root /var/lib/webgen/HTML` Sets the main folder for where our website's files are stored. When someone visits the site, nginx will look in this folder to find and serve the requested files.
+* `alias /var/lib/webgen/documents/;` incoming requests to /documents in your website's URL will be associate to the folder /var/lib/webgen/documents/ on the server. It’s used when the files you want to serve for a specific URL path aren’t in the main website folder.
+* Root uses the full location path as part of the file lookup.It appends the URL path to the root value to find the file.
+* Alias maps the URL path to the specified directory but it doesn't append the location path.
 
 5. Create a symbolic link 
 
@@ -288,17 +290,22 @@ server {
 
 `sudo ufw allow ssh`
 
+* allows incoming SSH connections by enabling the default SSH port 22
 <br>
 
 2. Limit the rate for ssh connections
 
 `sudo ufw limit ssh`
 
+* Limits the rate of SSH connections to prevent brute-force attacks
+
 <br>
 
 3.  Allow http connections
 
 `sudo ufw allow http`
+
+* Allows incoming HTTP connections by opening the default HTTP port 80
 
 <br>
 
@@ -319,6 +326,8 @@ server {
 6. Check the status of the firewall to confirm everything is working correctly
 
 `sudo ufw status verbose`
+
+* Displays the current status of the UFW firewall along with detailed information about active rules and configurations
 
 <br>
 
